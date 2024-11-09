@@ -1,12 +1,15 @@
 package com.example.eventticketingsystem.model;
-import com.example.eventticketingsystem.model.TicketPool;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Vendor implements Runnable {
-    private final int ticketReleaseRate; // Tickets added per second
-    private final int vendorTotalTickets; // Max tickets this vendor can add
+    private static final AtomicInteger vendorCounter = new AtomicInteger(0);
+    private final String vendorId;
+    private final int ticketReleaseRate;
+    private final int vendorTotalTickets;
     private final TicketPool ticketPool;
 
     public Vendor(int ticketReleaseRate, int vendorTotalTickets, TicketPool ticketPool) {
+        this.vendorId = "V" + vendorCounter.incrementAndGet();
         this.ticketReleaseRate = ticketReleaseRate;
         this.vendorTotalTickets = vendorTotalTickets;
         this.ticketPool = ticketPool;
@@ -20,7 +23,14 @@ public class Vendor implements Runnable {
             synchronized (ticketPool) {
                 if (ticketPool.canAddTickets(ticketReleaseRate)) {
                     int ticketsToAdd = Math.min(ticketReleaseRate, vendorTotalTickets - ticketsAdded);
-                    ticketPool.addTickets(ticketsToAdd);
+
+                    for (int i = 0; i < ticketsToAdd; i++) {
+                        Ticket newTicket = new Ticket(vendorId, vendorTotalTickets);
+                        ticketPool.addTickets(newTicket);
+
+                        System.out.println("Vendor ID: " + vendorId + " is adding Ticket ID: " + newTicket.getTicketId());
+                    }
+
                     ticketsAdded += ticketsToAdd;
                     System.out.println("Vendor added " + ticketsToAdd + " tickets. Total tickets in pool: " + ticketPool.getCurrentTicketCount());
                 } else {
@@ -29,7 +39,7 @@ public class Vendor implements Runnable {
             }
 
             try {
-                Thread.sleep(1000); // Release rate interval
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.err.println("Vendor thread interrupted: " + e.getMessage());
@@ -38,4 +48,3 @@ public class Vendor implements Runnable {
         System.out.println("Vendor finished adding tickets.");
     }
 }
-

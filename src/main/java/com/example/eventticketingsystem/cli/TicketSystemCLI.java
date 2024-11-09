@@ -38,12 +38,12 @@ public class TicketSystemCLI {
                 case 1:
                     VendorConfig vendorConfig = getVendorConfig();
                     vendorConfigs.add(vendorConfig);
-                    //configManager.saveVendorConfig(vendorConfig);
+                    //configManager.saveVendorConfigsAsJson((List<VendorConfig>) vendorConfig);
                     break;
                 case 2:
                     CustomerConfig customerConfig = getCustomerConfig();
                     customerConfigs.add(customerConfig);
-                    //configManager.saveCustomerConfig(customerConfig);
+                    //configManager.saveCustomerConfigsAsJson((List<CustomerConfig>) customerConfig);
                     break;
                 case 3:
                     systemManager.startSimulation(eventConfig, vendorConfigs, customerConfigs);
