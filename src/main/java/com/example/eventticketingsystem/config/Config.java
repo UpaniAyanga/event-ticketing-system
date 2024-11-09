@@ -1,7 +1,6 @@
 package com.example.eventticketingsystem.config;
 
 public class Config {
-
     private int totalTickets;
     private int maxTicketCapacity;
 
@@ -9,15 +8,20 @@ public class Config {
         this.totalTickets = totalTickets;
         this.maxTicketCapacity = maxTicketCapacity;
     }
+
+    // Getters and setters
     public int getTotalTickets() {
         return totalTickets;
     }
+
     public void setTotalTickets(int totalTickets) {
         this.totalTickets = totalTickets;
     }
+
     public int getMaxTicketCapacity() {
         return maxTicketCapacity;
     }
+
     public void setMaxTicketCapacity(int maxTicketCapacity) {
         this.maxTicketCapacity = maxTicketCapacity;
     }
