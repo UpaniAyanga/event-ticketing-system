@@ -1,35 +1,52 @@
 package com.example.eventticketingsystem.model;
-import com.example.eventticketingsystem.model.TicketPool;
+
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Customer implements Runnable {
-    private final int ticketRetrievalRate; // Tickets retrieved per second
+    private static final AtomicInteger customerCounter = new AtomicInteger(0);
+    private final String customerId;
+    private final int ticketCount; // Total tickets to retrieve
     private final TicketPool ticketPool;
+    private final int retrievalRate;
 
-    public Customer(int ticketRetrievalRate, TicketPool ticketPool) {
-        this.ticketRetrievalRate = ticketRetrievalRate;
+    public Customer(TicketPool ticketPool, int retrievalRate) {
+        this.customerId = "Cust" + customerCounter.incrementAndGet();
+        this.ticketCount = new Random().nextInt(10) + 1;
         this.ticketPool = ticketPool;
+        this.retrievalRate = retrievalRate;
     }
 
     @Override
     public void run() {
-        while (true) {
-            synchronized (ticketPool) {
-                if (ticketPool.canRetrieveTickets(ticketRetrievalRate)) {
-                    ticketPool.removeTickets(ticketRetrievalRate);
-                    System.out.println("Customer retrieved " + ticketRetrievalRate + " tickets. Remaining tickets in pool: " + ticketPool.getCurrentTicketCount());
-                } else {
-                    System.out.println("Not enough tickets in pool. Ending Simulation.");
-                    break;
+        try {
+            int ticketsRetrieved = 0;
+            while (ticketsRetrieved < ticketCount) {
 
+                int ticketsToRetrieve = Math.min(retrievalRate, ticketCount - ticketsRetrieved);
+
+                ticketPool.removeTickets(ticketsToRetrieve, customerId, retrievalRate);
+                ticketsRetrieved += ticketsToRetrieve;
+
+                System.out.println("Customer " + customerId + " retrieved " + ticketsRetrieved + "/" + ticketCount + " tickets.");
+
+                if (ticketsRetrieved < ticketCount) {
+                    Thread.sleep(1000);
                 }
             }
 
-            try {
-                Thread.sleep(1000); // Retrieval rate interval
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.err.println("Customer thread interrupted: " + e.getMessage());
-            }
+            System.out.println("Customer " + customerId + " finished retrieving " + ticketCount + " tickets.");
+        } catch (InterruptedException e) {
+            System.out.println("Customer " + customerId + " stopped.");
+            Thread.currentThread().interrupt();
         }
+    }
+
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public int getTicketCount() {
+        return ticketCount;
     }
 }

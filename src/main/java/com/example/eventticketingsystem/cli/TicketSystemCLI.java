@@ -1,91 +1,98 @@
 package com.example.eventticketingsystem.cli;
-import com.example.eventticketingsystem.config.Config;
-import com.example.eventticketingsystem.config.ConfigManager;
-import com.example.eventticketingsystem.config.CustomerConfig;
-import com.example.eventticketingsystem.config.VendorConfig;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.example.eventticketingsystem.config.ConfigManager;
+import com.example.eventticketingsystem.config.SimulationManager;
+import com.example.eventticketingsystem.model.Config;
+import com.example.eventticketingsystem.model.TicketPool;
+
 import java.util.Scanner;
 
 public class TicketSystemCLI {
-    private Scanner scanner = new Scanner(System.in);
-    private SystemManager systemManager = new SystemManager();
+    private enum SystemState {INITIAL, RUNNING, STOPPED};
+    private SystemState systemState = SystemState.INITIAL;
     private ConfigManager configManager = new ConfigManager();
-    private List<VendorConfig> vendorConfigs = new ArrayList<>();
-    private List<CustomerConfig> customerConfigs = new ArrayList<>();
+    private SimulationManager simulationManager;
 
     public static void main(String[] args) {
         TicketSystemCLI cli = new TicketSystemCLI();
-        cli.runCLI();
-    }
-
-    public void runCLI() {
-        Config eventConfig = getEventConfig();
-        configManager.saveConfigAsJson(eventConfig);
+        Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            System.out.println("\n--- Event Ticketing System ---");
-            System.out.println("1. Add Vendor");
-            System.out.println("2. Add Customer");
-            System.out.println("3. Start Simulation");
+            System.out.println("\n==============================");
+            System.out.println("Real-Time Ticketing System");
+            System.out.println("==============================");
+            System.out.println("1. Start System");
+            System.out.println("2. Stop System");
+            System.out.println("3. Run Simulation");
             System.out.println("4. Exit");
             System.out.print("Enter your choice: ");
 
-            int choice = scanner.nextInt();
+            String choice = scanner.nextLine();
 
-            switch (choice) {
-                case 1:
-                    VendorConfig vendorConfig = getVendorConfig();
-                    vendorConfigs.add(vendorConfig);
-                    //configManager.saveVendorConfigsAsJson((List<VendorConfig>) vendorConfig);
-                    break;
-                case 2:
-                    CustomerConfig customerConfig = getCustomerConfig();
-                    customerConfigs.add(customerConfig);
-                    //configManager.saveCustomerConfigsAsJson((List<CustomerConfig>) customerConfig);
-                    break;
-                case 3:
-                    systemManager.startSimulation(eventConfig, vendorConfigs, customerConfigs);
-                    return;
-                case 4:
-                    exitSystem();
-                    return;
-                default:
-                    System.out.println("Invalid choice. Please select between 1 and 4.");
+            try {
+                switch (choice) {
+                    case "1":
+                        cli.startSystem();
+                        break;
+                    case "2":
+                        cli.stopSystem();
+                        break;
+                    case "3":
+                        cli.startSimulation();
+                        break;
+                    case "4":
+                        System.out.println("Exiting the system. Goodbye!");
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
             }
         }
     }
 
-    private Config getEventConfig() {
-        System.out.print("Enter Total Tickets in Event: ");
-        int totalTickets = scanner.nextInt();
+    public void startSystem() {
+        if (systemState == SystemState.RUNNING) {
+            System.out.println("System is already running.");
+            return;
+        }
+        System.out.println("Starting the system...");
+        systemState = SystemState.RUNNING;
 
-        System.out.print("Enter Max Ticket Capacity of the Pool: ");
-        int maxTicketCapacity = scanner.nextInt();
+        configManager.configInputs();
+        Config config = configManager.getConfig();
+        TicketPool ticketPool = new TicketPool(config.getMaxTicketCapacity(), config.getTotalEventTickets());
 
-        return new Config(totalTickets, maxTicketCapacity);
+        simulationManager = new SimulationManager(ticketPool);
+
+        System.out.println("Generating vendors...");
+        simulationManager.generateVendors(config.getVendorCount(), config.getTotalEventTickets(), config.getTicketReleaseRate());
+
+        System.out.println("Generating customers...");
+        simulationManager.generateCustomers(config.getCustomerCount(), config.getTicketRetrievalRate());
+
+        System.out.println("System started. Ready to run simulation.");
     }
 
-    private VendorConfig getVendorConfig() {
-        System.out.print("Enter Ticket Release Rate: ");
-        int ticketReleaseRate = scanner.nextInt();
-
-        System.out.print("Enter Total Tickets Vendor Will Sell: ");
-        int vendorTotalTickets = scanner.nextInt();
-
-        return new VendorConfig(ticketReleaseRate, vendorTotalTickets);
+    public void stopSystem() {
+        if (systemState == SystemState.RUNNING) {
+            System.out.println("Stopping the system...");
+            systemState = SystemState.STOPPED;
+            simulationManager.resetSimulation();
+            System.out.println("System stopped successfully.");
+        } else {
+            System.out.println("System is not running.");
+        }
     }
 
-    private CustomerConfig getCustomerConfig() {
-        System.out.print("Enter Ticket Retrieval Rate: ");
-        int ticketRetrievalRate = scanner.nextInt();
-
-        return new CustomerConfig(ticketRetrievalRate);
-    }
-
-    private void exitSystem() {
-        System.out.println("Exiting the system. Goodbye!");
-        scanner.close();
+    public void startSimulation() {
+        if (systemState == SystemState.RUNNING) {
+            System.out.println("Starting simulation...");
+            simulationManager.startSimulation();
+        } else {
+            System.out.println("System is not running. Please start the system first.");
+        }
     }
 }

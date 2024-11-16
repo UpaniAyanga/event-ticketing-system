@@ -1,57 +1,113 @@
 package com.example.eventticketingsystem.model;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class TicketPool {
-    private final List<Ticket> tickets;
     private final int maxTicketCapacity;
-    private final int totalTicketsInEvent;
-    private int currentTicketCount = 0;
-    private int totalTicketsAdded = 0;
+    private final int totalEventTickets;
+    private int totalTicketsProduced = 0;
+    private int totalTicketsConsumed = 0;
+    private final List<Ticket> tickets = new LinkedList<>();
 
-    public TicketPool(int maxTicketCapacity, int totalTicketsInEvent) {
+    public TicketPool(int maxTicketCapacity, int totalEventTickets) {
         this.maxTicketCapacity = maxTicketCapacity;
-        this.totalTicketsInEvent = totalTicketsInEvent;
-        this.tickets = new ArrayList<>();
+        this.totalEventTickets = totalEventTickets;
     }
 
-    public synchronized boolean canAddTickets(int tickets) {
-        return currentTicketCount + tickets <= maxTicketCapacity && totalTicketsAdded + tickets <= totalTicketsInEvent;
-    }
-
-    public synchronized void addTickets(Ticket ticket) {
-        if (canAddTickets(1)) {
-            tickets.add(ticket);
-            currentTicketCount ++;
-            totalTicketsAdded ++;
-        }
-    }
-
-    public synchronized boolean canRetrieveTickets(int tickets) {
-        return currentTicketCount >= tickets;
-    }
-
-    public synchronized void removeTickets(int tickets) {
-        if (canRetrieveTickets(tickets)) {
-            currentTicketCount -= tickets;
-        }
-    }
-
-    public Ticket getTicketById(String ticketId) {
-        for (Ticket ticket : tickets) {
-            if (ticket.getTicketId().equals(ticketId)) {
-                return ticket;
+    public synchronized void addTickets(int count, String vendorId, int releaseRate) {
+        while (tickets.size() + count > maxTicketCapacity || totalTicketsProduced + count > totalEventTickets) {
+            if (totalTicketsProduced >= totalEventTickets) {
+                notifyAll();
+                return;
+            }
+            try {
+                System.out.println("Vendor " + vendorId + " waiting for space in the pool...");
+                wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Thread interrupted while waiting to add tickets.");
             }
         }
-        return null; // Return null if ticket not found
+
+        int ticketsToAdd = count;
+        while (ticketsToAdd > 0) {
+            int ticketsAddedPerTime = Math.min(ticketsToAdd, releaseRate);
+            System.out.println("Vendor " + vendorId + " is adding " + ticketsAddedPerTime + " tickets.");
+
+            for (int i = 0; i < ticketsAddedPerTime; i++) {
+                tickets.add(new Ticket(vendorId));
+            }
+
+            totalTicketsProduced += ticketsAddedPerTime;
+            ticketsToAdd -= ticketsAddedPerTime;
+
+            System.out.println("Vendor " + vendorId + " added " + ticketsAddedPerTime + " tickets. Current pool size: " + tickets.size());
+
+            if (ticketsToAdd > 0) {
+                try {
+                    System.out.println("Vendor " + vendorId + " waiting to add more tickets...");
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Thread interrupted while waiting to add more tickets.");
+                }
+            }
+        }
+
+        notifyAll();
     }
 
-    public int getCurrentTicketCount() {
-        return currentTicketCount;
+
+    public synchronized void removeTickets(int count, String customerId, int retrievalRate) {
+        while (tickets.size() < count) {
+            if (totalTicketsProduced >= totalEventTickets && tickets.isEmpty()) {
+                System.out.println("Customer " + customerId + ": All tickets have been sold out.");
+                notifyAll();
+                return;
+            }
+            try {
+                System.out.println("Customer " + customerId + " waiting for tickets...");
+                wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Thread interrupted while waiting for tickets.");
+            }
+        }
+
+        int ticketsToRetrieve = count;
+        while (ticketsToRetrieve > 0) {
+            int ticketsBoughtPerTime = Math.min(ticketsToRetrieve, retrievalRate);
+            System.out.println("Customer " + customerId + " retrieving " + ticketsBoughtPerTime + " tickets.");
+
+            for (int i = 0; i < ticketsBoughtPerTime; i++) {
+                tickets.remove(0);
+            }
+
+            ticketsToRetrieve -= ticketsBoughtPerTime;
+            totalTicketsConsumed += ticketsBoughtPerTime;
+            System.out.println("Customer " + customerId + " retrieved " + ticketsBoughtPerTime + " tickets. Remaining tickets to retrieve: " + ticketsToRetrieve);
+
+            if (ticketsToRetrieve > 0) {
+                try {
+                    System.out.println("Customer " + customerId + " waiting to retrieve more tickets...");
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Thread interrupted while waiting to retrieve more tickets.");
+                }
+            }
+        }
+        notifyAll();
     }
 
-    public List<Ticket> getAllTickets() {
-        return new ArrayList<>(tickets);
+
+
+    public synchronized int getTicketCount() {
+        return tickets.size();
+    }
+
+    public synchronized void clearPool() {
+        tickets.clear();
     }
 }
