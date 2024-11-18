@@ -1,5 +1,6 @@
 package com.example.eventticketingsystem.model;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,6 +10,7 @@ public class TicketPool {
     private int totalTicketsProduced = 0;
     private int totalTicketsConsumed = 0;
     private final List<Ticket> tickets = new LinkedList<>();
+    private static final Logger logger = LogManager.getLogger();
 
     public TicketPool(int maxTicketCapacity, int totalEventTickets) {
         this.maxTicketCapacity = maxTicketCapacity;
@@ -22,7 +24,7 @@ public class TicketPool {
                 return;
             }
             try {
-                System.out.println("Vendor " + vendorId + " waiting for space in the pool...");
+                logger.info("Vendor " + vendorId + " waiting for space in the pool...");
                 wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -33,7 +35,7 @@ public class TicketPool {
         int ticketsToAdd = count;
         while (ticketsToAdd > 0) {
             int ticketsAddedPerTime = Math.min(ticketsToAdd, releaseRate);
-            System.out.println("Vendor " + vendorId + " is adding " + ticketsAddedPerTime + " tickets.");
+            logger.info("Vendor " + vendorId + " is adding " + ticketsAddedPerTime + " tickets.");
 
             for (int i = 0; i < ticketsAddedPerTime; i++) {
                 tickets.add(new Ticket(vendorId));
