@@ -1,8 +1,8 @@
 package com.example.eventticketingsystem.service;
 
 import com.example.eventticketingsystem.interfaces.TicketSystemInterface;
-import com.example.eventticketingsystem.config.ConfigManager;
-import com.example.eventticketingsystem.config.SimulationManager;
+import com.example.eventticketingsystem.cli.ConfigManager;
+import com.example.eventticketingsystem.cli.SimulationManager;
 import com.example.eventticketingsystem.model.Config;
 import com.example.eventticketingsystem.model.TicketPool;
 import org.springframework.stereotype.Service;

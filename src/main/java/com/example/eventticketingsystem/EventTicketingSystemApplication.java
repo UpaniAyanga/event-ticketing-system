@@ -1,6 +1,6 @@
 package com.example.eventticketingsystem;
 
-import com.example.eventticketingsystem.config.ConfigManager;
+import com.example.eventticketingsystem.cli.ConfigManager;
 import com.example.eventticketingsystem.service.TicketSystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;

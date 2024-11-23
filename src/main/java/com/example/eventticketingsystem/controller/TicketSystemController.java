@@ -1,7 +1,6 @@
 package com.example.eventticketingsystem.controller;
 
 import com.example.eventticketingsystem.service.TicketSystemService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,6 +32,11 @@ public class TicketSystemController {
     public String startSimulation() {
         ticketSystemService.startSimulation();
         return "Simulation started";
+    }
+
+    @GetMapping("/test")
+    public String test() {
+        return "Test successful";
     }
 
 }

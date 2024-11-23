@@ -1,4 +1,4 @@
-package com.example.eventticketingsystem.config;
+package com.example.eventticketingsystem.cli;
 
 import com.example.eventticketingsystem.model.Customer;
 import com.example.eventticketingsystem.model.TicketPool;

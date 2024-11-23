@@ -1,10 +1,11 @@
-package com.example.eventticketingsystem.config;
+package com.example.eventticketingsystem.cli;
+
 import com.example.eventticketingsystem.model.Config;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.Scanner;
-import org.springframework.stereotype.Component;
 @Component
 public class ConfigManager {
 

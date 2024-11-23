@@ -1,5 +1,4 @@
 package com.example.eventticketingsystem.cli;
-import com.example.eventticketingsystem.config.ConfigManager;
 import com.example.eventticketingsystem.service.TicketSystemService;
 import java.util.Scanner;
 
