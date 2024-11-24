@@ -1,5 +1,7 @@
 package com.example.eventticketingsystem.cli;
+
 import com.example.eventticketingsystem.service.TicketSystemService;
+
 import java.util.Scanner;
 
 public class TicketSystemCLI {
@@ -8,13 +10,13 @@ public class TicketSystemCLI {
         TicketSystemService ticketSystemService = new TicketSystemService(configManager);
         Scanner scanner = new Scanner(System.in);
 
+        System.out.println("Welcome to the Real-Time Ticketing System (CLI).");
+
         while (true) {
             System.out.println("\n==============================");
-            System.out.println("Real-Time Ticketing System");
-            System.out.println("==============================");
-            System.out.println("1. Start System");
-            System.out.println("2. Stop System");
-            System.out.println("3. Run Simulation");
+            System.out.println("1. Load Configuration");
+            System.out.println("2. Start Simulation");
+            System.out.println("3. Stop Simulation");
             System.out.println("4. Exit");
             System.out.print("Enter your choice: ");
 
@@ -23,13 +25,14 @@ public class TicketSystemCLI {
             try {
                 switch (choice) {
                     case "1":
-                        ticketSystemService.startSystem();
+                        configManager.collectConfigFromCLI();
+                        ticketSystemService.initializeSystem();
                         break;
                     case "2":
-                        ticketSystemService.stopSystem();
+                        ticketSystemService.startSimulation();
                         break;
                     case "3":
-                        ticketSystemService.startSimulation();
+                        ticketSystemService.stopSimulation();
                         break;
                     case "4":
                         System.out.println("Exiting the system. Goodbye!");

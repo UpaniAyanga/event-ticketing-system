@@ -1,10 +1,11 @@
 package com.example.eventticketingsystem.controller;
 
+import com.example.eventticketingsystem.model.Config;
 import com.example.eventticketingsystem.service.TicketSystemService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/eventTicketingSystem")
+@RequestMapping("/api/event-ticketing")
 public class TicketSystemController {
 
     private final TicketSystemService ticketSystemService;
@@ -13,30 +14,21 @@ public class TicketSystemController {
         this.ticketSystemService = ticketSystemService;
     }
 
-    @PostMapping("/startSystem")
-    @ResponseBody
-    public String startSystem() {
-        ticketSystemService.startSystem();
-        return "System started";
+    @PostMapping("/load-config")
+    public String loadConfig(@RequestBody Config config) {
+        ticketSystemService.loadConfig(config);
+        return "Configuration loaded successfully.";
     }
 
-    @PostMapping("/stopSystem")
-    @ResponseBody
-    public String stopSystem() {
-        ticketSystemService.stopSystem();
-        return "System stopped";
-    }
-
-    @PostMapping("/startSimulation")
-    @ResponseBody
+    @PostMapping("/start-simulation")
     public String startSimulation() {
         ticketSystemService.startSimulation();
-        return "Simulation started";
+        return "Simulation started.";
     }
 
-    @GetMapping("/test")
-    public String test() {
-        return "Test successful";
+    @PostMapping("/stop-simulation")
+    public String stopSimulation() {
+        ticketSystemService.stopSimulation();
+        return "Simulation stopped.";
     }
-
 }

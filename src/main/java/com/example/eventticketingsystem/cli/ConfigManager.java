@@ -6,11 +6,14 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.Scanner;
+
 @Component
 public class ConfigManager {
 
     private Config config = new Config();
-    public void configInputs () {
+
+    // CLI-specific method to collect configurations
+    public void collectConfigFromCLI() {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Enter the total number of tickets in the event: ");
@@ -19,30 +22,39 @@ public class ConfigManager {
         System.out.println("Enter the maximum ticket capacity in the event pool: ");
         config.setMaxTicketCapacity(validatePositiveInteger(scanner.nextLine()));
 
-        System.out.println("Enter the release rate of tickets by Vendor: ");
+        System.out.println("Enter the release rate of tickets by vendors: ");
         config.setTicketReleaseRate(validatePositiveInteger(scanner.nextLine()));
 
-        System.out.println("Enter the retrieval rate of tickets by Customer: ");
+        System.out.println("Enter the retrieval rate of tickets by customers: ");
         config.setTicketRetrievalRate(validatePositiveInteger(scanner.nextLine()));
 
-        System.out.println("Enter the number of Vendors for simulation: ");
+        System.out.println("Enter the number of vendors for the simulation: ");
         config.setVendorCount(validatePositiveInteger(scanner.nextLine()));
 
-        System.out.println("Enter the number of Customers for simulation: ");
+        System.out.println("Enter the number of customers for the simulation: ");
         config.setCustomerCount(validatePositiveInteger(scanner.nextLine()));
 
         saveConfigToFile();
-
-        System.out.println("Configurations saved successfully.");
+        System.out.println("Configuration saved successfully.");
     }
 
-    public void saveConfigToFile() {
+    // Spring-specific method to set configurations via REST
+    public void setConfigFromApi(Config config) {
+        this.config = config;
+        saveConfigToFile();
+    }
+
+    public Config getConfig() {
+        return config;
+    }
+
+    private void saveConfigToFile() {
         try {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.writeValue(new File("config.json"), config);
-    } catch (Exception e) {
-        System.err.println("Error saving configuration to file: " + e.getMessage());
-    }
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.writeValue(new File("config.json"), config);
+        } catch (Exception e) {
+            System.err.println("Error saving configuration to file: " + e.getMessage());
+        }
     }
 
     private int validatePositiveInteger(String input) {
@@ -55,9 +67,5 @@ public class ConfigManager {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid input. Please enter a valid integer.");
         }
-    }
-
-    public Config getConfig() {
-        return config;
     }
 }

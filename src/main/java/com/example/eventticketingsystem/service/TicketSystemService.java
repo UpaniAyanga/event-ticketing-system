@@ -1,6 +1,5 @@
 package com.example.eventticketingsystem.service;
 
-import com.example.eventticketingsystem.interfaces.TicketSystemInterface;
 import com.example.eventticketingsystem.cli.ConfigManager;
 import com.example.eventticketingsystem.cli.SimulationManager;
 import com.example.eventticketingsystem.model.Config;
@@ -8,10 +7,10 @@ import com.example.eventticketingsystem.model.TicketPool;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TicketSystemService implements TicketSystemInterface {
+public class TicketSystemService {
 
-    private enum SystemState {INITIAL, RUNNING, STOPPED}
-    private SystemState systemState = SystemState.INITIAL;
+    private enum SystemState {INITIALIZED, SIMULATION_RUNNING, STOPPED}
+    private SystemState systemState = SystemState.STOPPED;
 
     private final ConfigManager configManager;
     private SimulationManager simulationManager;
@@ -20,53 +19,38 @@ public class TicketSystemService implements TicketSystemInterface {
         this.configManager = configManager;
     }
 
-    @Override
-    public void startSystem() {
-        if (systemState == SystemState.RUNNING) {
-            System.out.println("System is already running.");
-            return;
-        }
-        System.out.println("Starting the system...");
-        systemState = SystemState.RUNNING;
+    public void loadConfig(Config config) {
+        configManager.setConfigFromApi(config);
+        initializeSystem();
+    }
 
-        // Configure inputs
-        configManager.configInputs();
+    public void initializeSystem() {
         Config config = configManager.getConfig();
-
-        // Initialize TicketPool and SimulationManager
         TicketPool ticketPool = new TicketPool(config.getMaxTicketCapacity(), config.getTotalEventTickets());
         simulationManager = new SimulationManager(ticketPool);
 
-        // Generate vendors and customers
-        System.out.println("Generating vendors...");
         simulationManager.generateVendors(config.getVendorCount(), config.getTotalEventTickets(), config.getTicketReleaseRate());
-
-        System.out.println("Generating customers...");
         simulationManager.generateCustomers(config.getCustomerCount(), config.getTicketRetrievalRate());
 
-        System.out.println("System started. Ready to run simulation.");
+        systemState = SystemState.INITIALIZED;
+        System.out.println("System initialized. Ready to start the simulation.");
     }
 
-    @Override
-    public void stopSystem() {
-        if (systemState == SystemState.RUNNING) {
-            System.out.println("Stopping the system...");
-            systemState = SystemState.STOPPED;
-            simulationManager.resetSimulation();
-            System.out.println("System stopped successfully.");
-        } else {
-            System.out.println("System is not running.");
-        }
-    }
-
-    @Override
     public void startSimulation() {
-        if (systemState == SystemState.RUNNING) {
-            System.out.println("Starting simulation...");
-            simulationManager.startSimulation();
-        } else {
-            System.out.println("System is not running. Please start the system first.");
+        if (systemState != SystemState.INITIALIZED) {
+            throw new IllegalStateException("System is not ready. Please load configuration first.");
         }
+        simulationManager.startSimulation();
+        systemState = SystemState.SIMULATION_RUNNING;
+        System.out.println("Simulation started.");
+    }
+
+    public void stopSimulation() {
+        if (systemState != SystemState.SIMULATION_RUNNING) {
+            throw new IllegalStateException("Simulation is not running.");
+        }
+        simulationManager.resetSimulation();
+        systemState = SystemState.INITIALIZED;
+        System.out.println("Simulation stopped.");
     }
 }
-
